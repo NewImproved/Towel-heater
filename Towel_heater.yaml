@@ -1,0 +1,323 @@
+# ===========================================================================
+# Towel Heater 1 Configuration (Handdukstork)
+# ===========================================================================
+#
+### SEARCH AND REPLACE switch.towel_heater WITH YOUR ENTITY_ID! ###
+
+# Timer configuration
+timer:
+  timer_towel_heater1:
+    duration: "04:00:00"
+
+# Input datetime configuration
+input_datetime:
+  towel_heater1_oneshot_time:
+    name: Towel Heater 1 One-time Schedule
+    has_time: true
+    has_date: false
+    icon: mdi:calendar
+  towel_heater1_workday_time:
+    name: Towel Heater 1 Workday Schedule
+    has_time: true
+    has_date: false
+    icon: mdi:calendar
+
+# Input number configuration
+input_number:
+  towel_heater1_run_time:
+    name: Towel Heater 1 Run Time
+    unit_of_measurement: h
+    initial: 4
+    min: 3
+    max: 5
+    step: 1
+
+# Boolean toggles
+input_boolean:
+  towel_heater1_manual_override:
+    name: Towel Heater 1 Manual Control
+    icon: mdi:heating-coil
+  towel_heater1_oneshot_schedule:
+    name: Towel Heater 1 One-time Schedule
+    icon: mdi:timer
+  towel_heater1_workday_schedule:
+    name: Towel Heater 1 Workday Schedule
+    icon: mdi:timer-outline
+
+# Template sensors
+template:
+  - sensor:
+      - name: "Towel Heater 1 Calculated Start Time (One-time)"
+        unique_id: towel_heater1_oneshot_start_time
+        icon: mdi:clock
+        state: >
+          {% if states('input_datetime.towel_heater1_oneshot_time') != 'unknown' and states('input_datetime.towel_heater1_oneshot_time') != 'unavailable' %}
+            {{ strptime(((as_timestamp('1970-01-01 ' ~ states('input_datetime.towel_heater1_oneshot_time')) - (3600))|timestamp_custom), '%Y-%m-%d %H:%M:%S').strftime("%H:%M") }}
+          {% else %}
+            Never
+          {% endif %}
+
+      - name: "Towel Heater 1 Calculated Start Time (Workdays)"
+        unique_id: towel_heater1_workday_start_time
+        icon: mdi:clock
+        state: >
+          {% if states('input_datetime.towel_heater1_workday_time') != 'unknown' and states('input_datetime.towel_heater1_workday_time') != 'unavailable' %}
+            {{ strptime(((as_timestamp('1970-01-01 ' ~ states('input_datetime.towel_heater1_workday_time')) - (3600))|timestamp_custom), '%Y-%m-%d %H:%M:%S').strftime("%H:%M") }}
+          {% else %}
+            Never
+          {% endif %}
+
+      - name: "Towel Heater 1 Calculated Stop Time"
+        unique_id: towel_heater1_stop_time
+        icon: mdi:clock
+        state: >
+          {% if states('input_datetime.towel_heater1_oneshot_time') != 'unknown' and states('input_datetime.towel_heater1_oneshot_time') != 'unavailable' %}
+            {{ strptime(((as_timestamp('1970-01-01 ' ~ states('input_datetime.towel_heater1_oneshot_time')) + (states('input_number.towel_heater1_run_time')|float *3600))|timestamp_custom), '%Y-%m-%d %H:%M:%S').strftime("%H:%M") }}
+          {% else %}
+            Never
+          {% endif %}
+
+      - name: "Towel Heater 1 Status"
+        unique_id: towel_heater1_status
+        icon: mdi:heating-coil
+        state: >
+          {% if is_state('switch.towel_heater', 'on') %}
+            Handdukstork aktiverad.
+          {% else %}
+            Handdukstork ej aktiverad.
+          {% endif %}
+
+      - name: "Towel Heater 1 Time Until Use"
+        unique_id: towel_heater1_time_until_use
+        icon: mdi:timer
+        state: >
+          {% if states('input_datetime.towel_heater1_oneshot_time') != 'unknown' and states('input_datetime.towel_heater1_oneshot_time') != 'unavailable' %}
+            {{ (as_timestamp('1970-01-01 ' ~ states('input_datetime.towel_heater1_oneshot_time')) - as_timestamp(now())) / 60 }}
+          {% else %}
+            0
+          {% endif %}
+
+# Automations
+automation:
+  # Manual control automations
+  - id: "towel_heater1_manual_on"
+    alias: "Turn on towel heater 1 manually"
+    description: "Activates towel heater 1 when manual override is enabled"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_boolean.towel_heater1_manual_override
+        to: "on"
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.towel_heater
+      - service: timer.start
+        target:
+          entity_id: timer.timer_towel_heater1
+
+  - id: "towel_heater1_manual_off"
+    alias: "Turn off towel heater 1 manually"
+    description: "Deactivates towel heater 1 when manual override is disabled"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_boolean.towel_heater1_manual_override
+        to: "off"
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.towel_heater
+      - service: timer.finish
+        target:
+          entity_id: timer.timer_towel_heater1
+
+  - id: "towel_heater1_manual_sync"
+    alias: "Sync manual override switch with actual state"
+    description: "Turns off manual override switch when heater is turned off"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: switch.towel_heater
+        to: "off"
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.towel_heater1_manual_override
+      - service: timer.finish
+        target:
+          entity_id: timer.timer_towel_heater1
+
+  - id: "towel_heater1_start_timer_on_activation"
+    alias: "Start timer when towel heater 1 is activated"
+    description: "Starts safety timer when towel heater is turned on"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: switch.towel_heater
+        to: "on"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.timer_towel_heater1
+
+  - id: "towel_heater1_manual_activation_detect"
+    alias: "Detect manual activation from UI"
+    description: "Sets manual override when heater is turned on from UI"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: switch.towel_heater
+        to: "on"
+    action:
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.towel_heater1_manual_override
+
+  # Timer-based automations
+  - id: "towel_heater1_timer_expiry"
+    alias: "Turn off towel heater 1 when timer expires"
+    description: "Ensures towel heater turns off when safety timer expires"
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.timer_towel_heater1
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.towel_heater
+
+  - id: "towel_heater1_oneshot_off"
+    alias: "Turn off towel heater 1 (one-time schedule)"
+    description: "Deactivates towel heater when one-time schedule is disabled"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_boolean.towel_heater1_oneshot_schedule
+        to: "off"
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.towel_heater
+
+  - id: "towel_heater1_workday_off"
+    alias: "Turn off towel heater 1 (workday schedule)"
+    description: "Deactivates towel heater when workday schedule is disabled"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: input_boolean.towel_heater1_workday_schedule
+        to: "off"
+    action:
+      - service: switch.turn_off
+        target:
+          entity_id: switch.towel_heater
+
+  # Scheduled activation automations
+  - id: "towel_heater1_oneshot_immediate"
+    alias: "Start towel heater 1 immediately (one-time schedule)"
+    description: "Activates towel heater immediately if needed based on one-time schedule"
+    trigger:
+      - entity_id: input_boolean.towel_heater1_oneshot_schedule
+        from: "off"
+        platform: state
+        to: "on"
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ states('sensor.towel_heater1_time_until_use')|float(0) > 0 }}"
+        - condition: template
+          value_template: "{{ (states('input_number.towel_heater1_run_time')|float(4) * 60) >= states('sensor.towel_heater1_time_until_use')|float(0) }}"
+    action:
+      - service: switch.turn_on
+        entity_id: switch.towel_heater
+      - service: timer.start
+        target:
+          entity_id: timer.timer_towel_heater1
+
+  - id: "towel_heater1_oneshot_at_calculated_time"
+    alias: "Start towel heater 1 at calculated time (one-time schedule)"
+    description: "Starts towel heater at calculated time for one-time schedule"
+    trigger:
+      - platform: time_pattern
+        minutes: "/1"
+        seconds: 00
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ now().time().strftime("%H:%M") == states("sensor.towel_heater_1_calculated_start_time_one_time") }}'
+        - condition: state
+          entity_id: input_boolean.towel_heater1_oneshot_schedule
+          state: "on"
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.towel_heater
+      - service: timer.start
+        target:
+          entity_id: timer.timer_towel_heater1
+
+  - id: "towel_heater1_workday_at_calculated_time"
+    alias: "Start towel heater 1 at calculated time (workday schedule)"
+    description: "Starts towel heater at calculated time for workday schedule"
+    trigger:
+      - platform: time_pattern
+        minutes: "/1"
+        seconds: 00
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ now().time().strftime("%H:%M") == states("sensor.towel_heater_1_calculated_start_time_workdays") }}'
+        - condition: state
+          entity_id: input_boolean.towel_heater1_workday_schedule
+          state: "on"
+        - condition: state
+          entity_id: binary_sensor.workday_sensor
+          state: "on"
+    action:
+      - service: switch.turn_on
+        target:
+          entity_id: switch.towel_heater
+      - service: timer.start
+        target:
+          entity_id: timer.timer_towel_heater1
+
+  - id: "towel_heater1_oneshot_auto_disable"
+    alias: "Disable one-time schedule after completion"
+    description: "Inactivates one-time schedule when stop time is reached"
+    trigger:
+      - platform: time_pattern
+        minutes: "/1"
+        seconds: 00
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: '{{ now().time().strftime("%H:%M") == states("sensor.towel_heater_1_calculated_stop_time") }}'
+        - condition: state
+          entity_id: input_boolean.towel_heater1_oneshot_schedule
+          state: "on"
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.towel_heater1_oneshot_schedule
+
+  # Recovery automation
+  - id: "towel_heater1_timer_on_ha_restart"
+    alias: "Restart safety timer on Home Assistant restart"
+    description: "Ensures safety timer is running after system restart"
+    trigger:
+      - platform: homeassistant
+        event: start
+    condition:
+      - condition: state
+        entity_id: switch.towel_heater
+        state: "on"
+    action:
+      - service: timer.start
+        target:
+          entity_id: timer.timer_towel_heater1
