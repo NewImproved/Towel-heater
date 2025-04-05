@@ -28,7 +28,7 @@ This configuration creates a comprehensive control system for a towel heater wit
 
 ## Safety and Recovery Features
 - Automatic shutoff when the timer expires
-- Timer restart when Home Assistant restarts if the heater is already on
+- Timer restart when Home Assistant restarts if the heater is already on (to make sure the timer ends and thereby shuts of the heater)
 - Automatic disabling of one-time schedule after completion
 
 ## Automations
