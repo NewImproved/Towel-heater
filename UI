@@ -1,0 +1,50 @@
+### COPY CODE INTO A CARD ###
+type: custom:vertical-stack-in-card
+cards:
+  - type: custom:love-lock-card
+    popup: timeout
+    cards:
+      - type: custom:vertical-stack-in-card
+        title: Towel heater
+        cards:
+          - type: entities
+            entities:
+              - entity: sensor.towel_heater_1_status
+                name: Status
+              - entity: timer.timer_towel_heater1
+                name: Time left
+              - type: section
+              - type: custom:time-picker-card
+                entity: input_datetime.towel_heater1_oneshot_time
+                hour_mode: 24
+                hide:
+                  name: false
+                hour_step: 1
+                minute_step: 5
+                second_step: 5
+                name: Time for shower
+                layout:
+                  name: inside
+                  align_controls: center
+          - type: entities
+            entities:
+              - entity: input_boolean.towel_heater1_oneshot_schedule
+                name: Timer shower one time
+              - type: section
+              - type: custom:time-picker-card
+                entity: input_datetime.towel_heater1_workday_time
+                hour_mode: 24
+                hide:
+                  name: false
+                hour_step: 1
+                minute_step: 5
+                second_step: 5
+                name: time shower workdays
+                layout:
+                  name: inside
+                  align_controls: center
+              - entity: input_boolean.towel_heater1_workday_schedule
+                name: Timer shower workdays
+              - type: section
+              - entity: input_boolean.towel_heater1_manual_override
+                name: Manual activation
