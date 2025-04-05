@@ -1,5 +1,5 @@
 # ===========================================================================
-# Towel Heater 1 Configuration (Handdukstork)
+# Towel Heater 1 Configuration
 # ===========================================================================
 #
 ###❗❗ SEARCH AND REPLACE switch.towel_heater WITH YOUR ENTITY_ID! ❗❗###
@@ -82,9 +82,9 @@ template:
         icon: mdi:heating-coil
         state: >
           {% if is_state('switch.towel_heater', 'on') %}
-            Handdukstork aktiverad.
+            Towel heater activated.
           {% else %}
-            Handdukstork ej aktiverad.
+            Towel heater not activated.
           {% endif %}
 
       - name: "Towel Heater 1 Time Until Use"
