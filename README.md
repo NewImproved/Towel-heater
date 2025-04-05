@@ -1,7 +1,7 @@
 # Towel Heater Control System
 
 ## Core Functionality
-This configuration creates a comprehensive control system for a towel heater (called "Handdukstork" in Swedish) with multiple scheduling options and safety features.
+This configuration creates a comprehensive control system for a towel heater with multiple scheduling options and safety features.
 
 ## Control Methods
 1. **Manual Control**
