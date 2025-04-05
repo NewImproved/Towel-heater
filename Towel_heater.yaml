@@ -2,7 +2,7 @@
 # Towel Heater 1 Configuration (Handdukstork)
 # ===========================================================================
 #
-### SEARCH AND REPLACE switch.towel_heater WITH YOUR ENTITY_ID! ###
+###❗❗ SEARCH AND REPLACE switch.towel_heater WITH YOUR ENTITY_ID! ❗❗###
 
 # Timer configuration
 timer:
