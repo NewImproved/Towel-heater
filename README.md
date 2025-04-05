@@ -41,3 +41,7 @@ The system includes multiple automations to handle:
 
 You physical device that controls power to the towel heater needs to be added to the code. Replace "switch.towel_heater" in the code with our switch.
 My configuration uses my switch.towel_heater as a manual control and as a visual cue if the heater is on or of, the automation is set up for the switch to be used that way.
+
+## Screenshot
+Text in picture is in swedish. Text in code is in english.
+![Screenshot UI](https://github.com/NewImproved/Towel-heater/blob/main/UI.jpg)
