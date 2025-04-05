@@ -1,4 +1,4 @@
-# Towel Heater Control System
+# Towel Heater
 
 ## Core Functionality
 This configuration creates a comprehensive control system for a towel heater with multiple scheduling options and safety features.
